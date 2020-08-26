@@ -352,7 +352,7 @@ function wpfp_init() {
     $wpfp_options['clear'] = "Clear favorites";
     $wpfp_options['cleared'] = "<p>Favorites cleared!</p>";
     $wpfp_options['favorites_empty'] = "Favorite list is empty.";
-    $wpfp_options['cookie_warning'] = "Your favorite posts saved to your browsers cookies. If you clear cookies also favorite posts will be deleted.";
+    $wpfp_options['cookie_warning'] = "Your favourite apartments are saved to your browsers cookies. Please note that if you clear your cookies, your favourite apartments will be deleted.";
     $wpfp_options['rem'] = "remove";
     $wpfp_options['text_only_registered'] = "Only registered users can favorite!";
     $wpfp_options['statistics'] = 1;
