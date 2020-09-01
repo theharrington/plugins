@@ -1,5 +1,5 @@
-(function($) {
-    $('.wpfp-link').live('click', function() {
+(function($){
+    $('.wpfp-link').live('click',function() {
         dhis = $(this);
 
         wpfp_do_js( dhis, 1 );
@@ -8,11 +8,11 @@
         if (dhis.hasClass('remove-parent')) {
             dhis.parent("li").fadeOut();
         }
-        if (dhis.html() === '<div class="icons favs add"></div>') {
+        else if (dhis.html() === '<div class="icons favs add"></div>') {
                 $fave = $("#favCount").html();
         $tick = 1;
-        //console.log(Number($("#favCount").html()));
-        //console.log(dhis.html());
+        console.log(Number($("#favCount").html()));
+        console.log(dhis.html());
         $("#favCount").html(Number(Number($tick) + Number($fave)));
         // for favorite post listing page
         } else {
@@ -20,7 +20,8 @@
         $fave = $fave -1;
         }
         return false;
-    });
+});
+
 
 function wpfp_do_js( dhis, doAjax ) {
     // loadingImg = dhis.prev();
@@ -45,5 +46,4 @@ function wpfp_do_js( dhis, doAjax ) {
 }
 
 }
-
 })(jQuery);
