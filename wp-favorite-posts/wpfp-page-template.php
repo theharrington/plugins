@@ -11,6 +11,7 @@
     global $short_stay_properties;
     global $shortstay;
     $short_stay_properties = [58];
+//var_dump($short_stay);
     $page_parent_ID = $post->post_parent;
 
     $wpfp_before = "";
@@ -26,15 +27,17 @@
     if ($wpfp_before):
         echo '<div class="wpfp-page-before">'.$wpfp_before.'</div>';
     endif;
-
+//var_dump($favorite_post_ids);
     if ($favorite_post_ids) {
 		$favorite_post_ids = array_reverse($favorite_post_ids);
-        $post_per_page = wpfp_get_option("post_per_page");
+       // $post_per_page = wpfp_get_option("post_per_page");
         $page = intval(get_query_var('paged'));
+
+	//var_dump(get_post_custom( $favorite_post_ids[0] ));
 
         $qry = array('post__in' => $favorite_post_ids, 'posts_per_page'=> $post_per_page, 'orderby' => 'post__in', 'paged' => $page);
         // custom post type support can easily be added with a line of code like below.
-        // $qry['post_type'] = array('post','page');
+        $qry['post_type'] = array('post','properties');
         query_posts($qry);
 
         ?>
@@ -51,7 +54,7 @@
                     <h2 class="clearfix"><a href='<?php echo get_permalink(); ?>' title='<?php echo get_the_title(); ?>'><?php echo get_the_title(); ?></a></h2>
                     <div class="row">
                         <div class="col-sm-6"><a href="javascript:;" class="fav-remove" ><?php wpfp_saveforlater_favorite_link(get_the_ID()); ?></a></div>
-                        <div class="col-sm-6 text-right"><a href="javascript:;" class="fav-remove" ><?php wpfp_remove_favorite_link(get_the_ID()); ?></a></div>
+                       <div class="col-sm-6 text-right"><a href="javascript:;" class="fav-remove" ><?php wpfp_remove_favorite_link(get_the_ID()); ?></a></div>
                     </div>
                     </div>
                     <div class=" pt-2 pt-lg-3 col-sm-6 col-lg-3">
