@@ -28,19 +28,40 @@ class Custom_Permalinks_PostTypes
      */
     private function post_nav( $order_by_class, $order_by, $search_permalink )
     {
+        $admin_url = get_admin_url();
+        $page_url  = $admin_url . 'admin.php?page=cp-post-permalinks';
+        $title_url = $page_url . '&amp;orderby=title&amp;order=' . $order_by;
+        $user_id   = get_current_user_id();
+
+        if ( $search_permalink ) {
+            $title_url = $title_url . $search_permalink;
+            $title_url = wp_nonce_url( $title_url,
+                'custom-permalinks-post_' . $user_id,
+                '_custom_permalinks_post_nonce'
+            );
+        }
+
         $post_nav = '<tr>' .
                       '<td id="cb" class="manage-column column-cb check-column">' .
-                        '<label class="screen-reader-text" for="cb-select-all-1">Select All</label>' .
+                        '<label class="screen-reader-text" for="cb-select-all-1">' .
+                            __( 'Select All', 'custom-permalinks' ) .
+                        '</label>' .
                         '<input id="cb-select-all-1" type="checkbox">' .
                       '</td>' .
                       '<th scope="col" id="title" class="manage-column column-title column-primary sortable ' . $order_by_class . '">' .
-                        '<a href="/wp-admin/admin.php?page=cp-post-permalinks&amp;orderby=title&amp;order=' . $order_by . $search_permalink . '">' .
-                          '<span>' . __( "Title", "custom-permalinks" ) . '</span>' .
+                        '<a href="' . $title_url . '">' .
+                          '<span>' .
+                              __( 'Title', 'custom-permalinks' ) .
+                          '</span>' .
                           '<span class="sorting-indicator"></span>' .
                         '</a>' .
                       '</th>' .
-                      '<th scope="col">' . __( "Type", "custom-permalinks" ) . '</th>' .
-                      '<th scope="col">' . __( "Permalink", "custom-permalinks" ) . '</th>' .
+                      '<th scope="col">' .
+                          __( 'Type', 'custom-permalinks' ) .
+                      '</th>' .
+                      '<th scope="col">' .
+                          __( 'Permalink', 'custom-permalinks' ) .
+                      '</th>' .
                     '</tr>';
 
         return $post_nav;
@@ -77,37 +98,34 @@ class Custom_Permalinks_PostTypes
         }
 
         // Handle Bulk Operations
-        if ( (
-                ( isset( $post_action ) && 'delete' === $post_action )
-                || ( isset( $post_action2 ) && 'delete' === $post_action2 )
-            )
+        if ( ( 'delete' === $post_action || 'delete' === $post_action2 )
             && check_admin_referer( 'custom-permalinks-post_' . $user_id,
                 '_custom_permalinks_post_nonce'
             )
         ) {
-          if ( isset( $post_permalinks ) && ! empty( $post_permalinks ) ) {
+          if ( ! empty( $post_permalinks ) ) {
               $post_ids = $post_permalinks;
               if ( is_array( $post_ids ) && 0 < count( $post_ids ) ) {
                   foreach ( $post_ids as $post_id ) {
                       if ( is_numeric( $post_id ) ) {
-                          delete_post_meta( $post_id, 'custom_permalink' );
+                          delete_metadata( 'post', $post_id, 'custom_permalink' );
                       }
                   }
               } else {
                   $error = '<div id="message" class="error">' .
                               '<p>' .
-                                __( 'Please select permalinks which you like to be deleted.',
-                                    'custom-permalinks'
-                                ) .
+                                  __( 'Please select permalinks which you like to be deleted.',
+                                      'custom-permalinks'
+                                  ) .
                               '</p>' .
                             '</div>';
               }
           } else {
               $error = '<div id="message" class="error">' .
                           '<p>' .
-                            __( 'There is some error to proceed your request. Please retry with your request or contact to the plugin author.',
-                                'custom-permalinks'
-                            ) .
+                              __( 'There is some error to proceed your request. Please retry with your request or contact to the plugin author.',
+                                  'custom-permalinks'
+                              ) .
                           '</p>' .
                         '</div>';
           }
@@ -139,14 +157,14 @@ class Custom_Permalinks_PostTypes
             $post_html       .= '<span class="subtitle">Search results for "' . $search_value . '"</span>';
         }
 
-        if ( $get_paged && is_numeric( $get_paged ) && 1 < $get_paged ) {
+        if ( is_numeric( $get_paged ) && 1 < $get_paged ) {
             $pager      = 20 * ( $get_paged - 1 );
             $page_limit = 'LIMIT ' . $pager . ', 20';
         }
 
-        if ( $get_order_by && 'title' === $get_order_by ) {
+        if ( 'title' === $get_order_by ) {
             $filter_options .= '<input type="hidden" name="orderby" value="title" />';
-            if ( $get_order && 'desc' === $get_order ) {
+            if ( 'desc' === $get_order ) {
                 $sorting_by      = 'ORDER By p.post_title DESC';
                 $order_by        = 'asc';
                 $order_by_class  = 'desc';
@@ -161,9 +179,8 @@ class Custom_Permalinks_PostTypes
 
         $count_query = "SELECT COUNT(p.ID) AS total_permalinks FROM $wpdb->posts AS p LEFT JOIN $wpdb->postmeta AS pm ON (p.ID = pm.post_id) WHERE pm.meta_key = 'custom_permalink' AND pm.meta_value != '' " . $filter_permalink . "";
         $count_posts = $wpdb->get_row( $count_query );
-        $post_nonce  = wp_nonce_field(
-            'custom-permalinks-post_' . $user_id, '_custom_permalinks_post_nonce',
-            true, false
+        $post_nonce  = wp_nonce_field( 'custom-permalinks-post_' . $user_id,
+            '_custom_permalinks_post_nonce', true, false
         );
 
         $post_html .= '<form action="' . $site_url . $request_uri . '" method="get">' .
@@ -171,24 +188,28 @@ class Custom_Permalinks_PostTypes
                         '<input type="hidden" name="page" value="cp-post-permalinks" />' .
                         $post_nonce .
                         $filter_options .
-                        '<label class="screen-reader-text" for="custom-permalink-search-input">Search Custom Permalink:</label>' .
+                        '<label class="screen-reader-text" for="custom-permalink-search-input">' .
+                            __( 'Search Custom Permalink:', 'custom-permalinks' ) .
+                        '</label>' .
                         '<input type="search" id="custom-permalink-search-input" name="s" value="' . $search_value . '">' .
-                        '<input type="submit" id="search-submit" class="button" value="Search Permalink"></p>' .
+                        '<input type="submit" id="search-submit" class="button" value="' . __( "Search Permalink", "custom-permalinks" ) . '"></p>' .
                       '</form>' .
                       '<form action="' . $site_url . $request_uri . '" method="post">' .
                         '<div class="tablenav top">' .
                           '<div class="alignleft actions bulkactions">' .
-                            '<label for="bulk-action-selector-top" class="screen-reader-text">Select bulk action</label>' .
+                            '<label for="bulk-action-selector-top" class="screen-reader-text">' .
+                                __( 'Select bulk action', 'custom-permalinks' ) .
+                            '</label>' .
                             $post_nonce .
                             '<select name="action" id="bulk-action-selector-top">' .
                               '<option value="-1">' .
-                                __( "Bulk Actions", "custom-permalinks" ) .
+                                  __( 'Bulk Actions', 'custom-permalinks' ) .
                               '</option>' .
                               '<option value="delete">' .
-                                __( "Delete Permalinks", "custom-permalinks" ) .
+                                  __( 'Delete Permalinks', 'custom-permalinks' ) .
                               '</option>' .
                             '</select>' .
-                            '<input type="submit" id="doaction" class="button action" value="Apply">' .
+                            '<input type="submit" id="doaction" class="button action" value="' . __( "Apply", "custom-permalinks" ) . '">' .
                           '</div>';
 
         $posts           = 0;
@@ -199,13 +220,15 @@ class Custom_Permalinks_PostTypes
             include_once CUSTOM_PERMALINKS_PATH . 'admin/class-custom-permalinks-pager.php';
 
             $cp_pager   = new Custom_Permalinks_Pager();
-            $post_html .= '<h2 class="screen-reader-text">Custom Permalink navigation</h2>';
+            $post_html .= '<h2 class="screen-reader-text">' .
+                            __( 'Custom Permalink navigation', 'custom-permalinks' ) .
+                          '</h2>';
 
             $query = "SELECT p.ID, p.post_title, p.post_type, pm.meta_value FROM $wpdb->posts AS p LEFT JOIN $wpdb->postmeta AS pm ON (p.ID = pm.post_id) WHERE pm.meta_key = 'custom_permalink' AND pm.meta_value != '' " . $filter_permalink . " " . $sorting_by . " " . $page_limit . "";
             $posts = $wpdb->get_results( $query );
 
             $total_pages = ceil( $count_posts->total_permalinks / 20 );
-            if ( $get_paged && is_numeric( $get_paged ) && 0 < $get_paged ) {
+            if ( is_numeric( $get_paged ) && 0 < $get_paged ) {
                 $pagination_html = $cp_pager->get_pagination(
                     $count_posts->total_permalinks, $get_paged, $total_pages
                 );
@@ -287,7 +310,7 @@ class Custom_Permalinks_PostTypes
         } else {
             $post_html .= '<tr class="no-items">' .
                             '<td class="colspanchange" colspan="4">' .
-                              __( "No permalinks found.", "custom-permalinks" ) .
+                                __( 'No permalinks found.', 'custom-permalinks' ) .
                             '</td>' .
                           '</tr>';
         }
@@ -297,16 +320,18 @@ class Custom_Permalinks_PostTypes
 
         $post_html .= '<div class="tablenav bottom">' .
                         '<div class="alignleft actions bulkactions">' .
-                          '<label for="bulk-action-selector-bottom" class="screen-reader-text">Select bulk action</label>' .
+                          '<label for="bulk-action-selector-bottom" class="screen-reader-text">' .
+                              __( 'Select bulk action', 'custom-permalinks' ) .
+                          '</label>' .
                           '<select name="action2" id="bulk-action-selector-bottom">' .
-                            '<option value="-1">'
-                              . __( "Bulk Actions", "custom-permalinks" ) .
+                            '<option value="-1">' .
+                                __( 'Bulk Actions', 'custom-permalinks' ) .
                             '</option>' .
                             '<option value="delete">' .
-                              __( "Delete Permalinks", "custom-permalinks" ) .
+                                __( 'Delete Permalinks', 'custom-permalinks' ) .
                             '</option>' .
                           '</select>' .
-                          '<input type="submit" id="doaction2" class="button action" value="Apply">' .
+                          '<input type="submit" id="doaction2" class="button action" value="' . __( "Apply", "custom-permalinks" ) . '">' .
                         '</div>' .
                         $pagination_html .
                       '</div>' .

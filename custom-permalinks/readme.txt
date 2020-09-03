@@ -2,8 +2,8 @@
 Contributors: sasiddiqui, michaeltyson
 Tags: permalink, url, link, address, custom, redirect, custom post type, GDPR, GDPR Compliant
 Requires at least: 2.6
-Tested up to: 5.4
-Stable tag: 1.6.2
+Tested up to: 5.5
+Stable tag: 1.7.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl.html
 
@@ -11,13 +11,32 @@ Set custom permalinks on a per-post, per-tag or per-category basis.
 
 == Description ==
 
-Lay out your site the way *you* want it. Set the URL of any post, page, tag or category to anything you want. Old permalinks will redirect properly to the new address. Custom Permalinks gives you ultimate control over your site structure.
+Lay out your site the way *you* want it. Set the URL of any post, page, tag or category to anything you want. Old permalinks will redirect properly to the new address. Custom Permalinks give you ultimate control over your site structure.
 
 > Be warned: *This plugin is not a replacement for WordPress's built-in permalink system*. Check your WordPress administration's "Permalinks" settings page first, to make sure that this doesn't already meet your needs.
 
 This plugin is only useful for assigning custom permalinks for *individual* posts, pages, tags or categories. It will not apply whole permalink structures or automatically apply a category's custom permalink to the posts within that category.
 
 > If anyone wants the different Structure Tags for their Post types or use symbols in the URLs So, use the [Permalinks Customizer](https://wordpress.org/plugins/permalinks-customizer/) which is a fork of this plugin and contains the enhancement of this plugin.
+
+=== Unsupported Characters ===
+
+Following characters are no longer allowed in the permalinks.
+
+* `<`
+* `>`
+* `{`
+* `}`
+* `|`
+* <code>`</code>
+* `^`
+* `\`
+* `(`
+* `)`
+* `[`
+* `]`
+
+> Permalinks created previously using any of these characters will not be affected in anyway. However, new permalinks will not support the use of these characters as they are not considered to be safe.
 
 == Privacy Policy ==
 
@@ -35,9 +54,45 @@ To have any kind of query please feel free to [contact us](https://www.customper
 
 == Filters ==
 
+=== Add `PATH_INFO` in `$_SERVER` Variable ===
+
+`
+add_filter( 'custom_permalinks_path_info', '__return_true' );
+`
+
+=== Disable redirects ===
+
+To disable complete redirects functionality provided by this plugin, add the filter that looks like this:
+
+`
+function yasglobal_avoid_redirect( $permalink )
+{
+    return true;
+}
+add_filter( 'custom_permalinks_avoid_redirect', 'yasglobal_avoid_redirect' );
+`
+
+=== Disable specific redirects ===
+
+To disable any specific redirect to be processed by this plugin, add the filter that looks like this:
+
+`
+function yasglobal_avoid_redirect( $permalink )
+{
+    // Replace 'testing-hello-world/' with the permalink you want to avoid
+    if ( 'testing-hello-world/' === $permalink ) {
+        return true;
+    }
+
+    return false;
+}
+add_filter( 'custom_permalinks_avoid_redirect', 'yasglobal_avoid_redirect' );
+`
+
 === Exclude permalink to be processed ===
 
-To exclude any Permalink to be processed with the plugin, add the filter looks like this:
+To exclude any Permalink to be processed by the plugin, add the filter that looks like this:
+
 `
 function yasglobal_xml_sitemap_url( $permalink )
 {
@@ -50,12 +105,14 @@ function yasglobal_xml_sitemap_url( $permalink )
 add_filter( 'custom_permalinks_request_ignore', 'yasglobal_xml_sitemap_url' );
 `
 
-=== Exclude PostType ===
+=== Exclude Post Type ===
 
-To exclude permalink from any post type so, just add the filter looks like this:
+To remove custom permalink **form** from any post type, add the filter that looks like this:
+
 `
 function yasglobal_exclude_post_types( $post_type )
 {
+    // Replace 'custompost' with your post type name
     if ( 'custompost' === $post_type ) {
         return '__true';
     }
@@ -65,11 +122,10 @@ function yasglobal_exclude_post_types( $post_type )
 add_filter( 'custom_permalinks_exclude_post_type', 'yasglobal_exclude_post_types' );
 `
 
-Note: `custom_permalinks_exclude_post_type` doesn't work on the posts permalink which has been created previously.
-
 === Exclude Posts ===
 
-To exclude permalink from any posts (based on ID, Template, etc), just add the filter looks like this:
+To exclude custom permalink **form**  from any posts (based on ID, Template, etc), add the filter that looks like this:
+
 `
 function yasglobal_exclude_posts( $post )
 {
@@ -82,8 +138,6 @@ function yasglobal_exclude_posts( $post )
 add_filter( 'custom_permalinks_exclude_posts', 'yasglobal_exclude_posts' );
 `
 
-Note: `custom_permalinks_exclude_posts` doesn't wor k on the posts permalink which has been created previously.
-
 === Remove `like` query ===
 
 To remove `like` query to being work, add below-mentioned line in your theme `functions.php`:
@@ -92,12 +146,6 @@ add_filter( 'cp_remove_like_query', '__return_false' );
 `
 
 Note: Use `custom_permalinks_like_query` filter if the URLs doesn't works for you after upgrading to `v1.2.9`.
-
-=== Add `PATH_INFO` in `$_SERVER` Variable ===
-
-`
-add_filter( 'custom_permalinks_path_info', '__return_true' );
-`
 
 === Thanks for the Support ===
 
@@ -124,6 +172,23 @@ This process defines you the steps to follow either you are installing through W
 2. Activate Custom Permalinks through the 'Plugins' menu in WordPress
 
 == Changelog ==
+
+= 1.7.1 - Aug 30, 2020 =
+
+  * Bugs
+    * Fix PHP notice (start reporting with WordPress 5.5)
+
+= 1.7.0 - Aug 20, 2020 =
+
+  * Bugs
+    * [Paged NextGen Galleries Broken with Custom Permalinks 1.62](https://github.com/samiahmedsiddiqui/custom-permalinks/issues/38)
+    * [custom permalink issue with weglot](https://wordpress.org/support/topic/custom-permalink-issue-with-weglot/)
+    * [Permalinks reverting back to old ones](https://wordpress.org/support/topic/permalinks-reverting-back-to-old-ones/)
+    * [A problem with wrongly deleted permalinks](https://wordpress.org/support/topic/a-problem-with-wrongly-deleted-permalinks/)
+  * Enhancements
+    * [Enhanced security through characters restriction](https://github.com/samiahmedsiddiqui/custom-permalinks#unsupported-characters)
+    * Introduce filter to disable specific redirect(s) or complete functionality
+    * Automatic replacement of upper case letters to lower case
 
 = 1.6.2 - Aug 10, 2020 =
 
@@ -152,39 +217,6 @@ This process defines you the steps to follow either you are installing through W
     * Added compatibility for WPML language switcher
     * Add filter to exclude Custom Permalinks for certain posts (based on Post IDs, template, etc)
     * Optimized Code
-
-= 1.5.1 - Jun 11, 2019 =
-
-  * Bug
-    * Added additional check for [Call to undefined function pll_current_language](https://wordpress.org/support/topic/call-to-undefined-function-pll_current_language/)
-
-= 1.5.0 - Jun 04, 2019 =
-
-  * Bugs
-    * [Issue with Polylang Setting Hide Default Language](https://wordpress.org/support/topic/issue-with-polylang-setting-hide-default-language/)
-    * Change deprecated actions with appropriate actions
-
-= 1.4.0 - Nov 08, 2018 =
-
-  * Enhancements
-    * Added Support for Gutenberg
-    * Set meta_keys to be protected to stop duplication in Custom Fields
-
-= 1.3.0 - June 07, 2018 =
-
-  * Enhancements
-    * [Conflict with WPML](https://wordpress.org/support/topic/conflict-with-wpml-17/)
-    * Avoid appending slashes and use trailingslashit instead
-
-= 1.2.24 - May 31, 2018 =
-
-  * Bug
-    * [FATAL ERROR when the administrator role not found](https://wordpress.org/support/topic/fatal-error-on-update-15/)
-
-= 1.2.23 - May 22, 2018 =
-
-  * Enhancement
-    * Added Privacy Policy Content for WordPress 4.9.6 and higher.
 
 = Earlier versions =
 
