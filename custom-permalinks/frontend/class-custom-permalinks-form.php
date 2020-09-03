@@ -63,6 +63,11 @@ class Custom_Permalinks_Form
         $exclude_post_types = apply_filters( 'custom_permalinks_exclude_post_type',
             $post->post_type
         );
+        /*
+         * Exclude custom permalink `form` from any post(s) if filter returns `true`.
+         *
+         * @since 1.6.0
+         */
         $exclude_posts      = apply_filters( 'custom_permalinks_exclude_posts',
             $post
         );
@@ -72,7 +77,7 @@ class Custom_Permalinks_Form
             $check_availability = true;
         } elseif ( 'attachment' === $post->post_type ) {
             $check_availability = true;
-        } elseif ( $post->ID === intval( get_option( 'page_on_front' ) ) ) {
+        } elseif ( $post->ID == get_option( 'page_on_front' ) ) {
             $check_availability = true;
         } elseif ( ! isset( $public_post_types[$post->post_type] ) ) {
             $check_availability = true;
@@ -96,7 +101,7 @@ class Custom_Permalinks_Form
     public function permalink_edit_box()
     {
         add_meta_box( 'custom-permalinks-edit-box',
-            __( 'Permalink', 'custom-permalinks' ),
+            __( 'Custom Permalinks', 'custom-permalinks' ),
             array( $this, 'meta_edit_form' ), null, 'normal', 'high',
             array(
                 '__back_compat_meta_box' => false,
@@ -137,18 +142,55 @@ class Custom_Permalinks_Form
             return;
         }
 
-        $this->delete_permalink( $post_id );
-
         $cp_frontend   = new Custom_Permalinks_Frontend();
         $original_link = $cp_frontend->original_post_link( $post_id );
-        if ( $_REQUEST['custom_permalink']
+
+        if ( isset( $_REQUEST['custom_permalink'] )
             && $_REQUEST['custom_permalink'] != $original_link
         ) {
-            add_post_meta( $post_id, 'custom_permalink',
-                str_replace( '%2F', '/', urlencode(
-                    ltrim( stripcslashes( $_REQUEST['custom_permalink'] ), '/' )
-                ) )
+            $reserved_chars = array(
+                '(',
+                ')',
+                '[',
+                ']',
             );
+
+            $unsafe_chars = array(
+                '<',
+                '>',
+                '{',
+                '}',
+                '|',
+                '`',
+                '^',
+                '\\',
+            );
+
+            $permalink = $_REQUEST['custom_permalink'];
+            $permalink = ltrim( $permalink, '/' );
+            $permalink = strtolower( $permalink );
+            $permalink = str_replace( $reserved_chars, '', $permalink );
+            $permalink = str_replace( $unsafe_chars, '', $permalink );
+            $permalink = urlencode( $permalink );
+            // Replace encoded slash input with slash
+            $permalink = str_replace( '%2F', '/', $permalink );
+
+            $replace_hyphen = array( '%20', '%2B', '+' );
+            $split_path     = explode( '%3F', $permalink );
+            if ( 1 < count( $split_path ) ) {
+                // Replace encoded space and plus input with hyphen
+                $replaced_path = str_replace( $replace_hyphen, '-', $split_path[0] );
+                $replaced_path = preg_replace( '/(\-+)/', '-', $replaced_path );
+                $permalink     = str_replace( $split_path[0], $replaced_path,
+                    $permalink
+                );
+            } else {
+                // Replace encoded space and plus input with hyphen
+                $permalink = str_replace( $replace_hyphen, '-', $permalink );
+                $permalink = preg_replace( '/(\-+)/', '-', $permalink );
+            }
+
+            update_post_meta( $post_id, 'custom_permalink', $permalink );
         }
     }
 
@@ -161,7 +203,7 @@ class Custom_Permalinks_Form
      */
     public function delete_permalink( $post_id )
     {
-        delete_post_meta( $post_id, 'custom_permalink' );
+        delete_metadata( 'post', $post_id, 'custom_permalink' );
     }
 
     /**
@@ -236,7 +278,7 @@ class Custom_Permalinks_Form
             }
 
             $content .= ' <span id="view-post-btn">' .
-                          '<a href="' . $view_post_link . '" class="button button-small" target="_blank">' . $view_post .'</a>' .
+                          '<a href="' . $view_post_link . '" class="button button-medium" target="_blank">' . $view_post .'</a>' .
                         '</span><br>';
             if ( true === $meta_box ) {
                 $content .= '<style>.editor-post-permalink,.cp-permalink-hidden{display:none;}</style>';
@@ -261,7 +303,7 @@ class Custom_Permalinks_Form
         $post = get_post( $post_id );
 
         $disable_cp = $this->exclude_custom_permalinks( $post );
-        $this->permalink_metabox  = 1;
+        $this->permalink_metabox = 1;
         if ( $disable_cp ) {
             return $html;
         }
@@ -467,7 +509,9 @@ class Custom_Permalinks_Form
 
         if ( $render_containers ) {
             echo '<br />' .
-                  '<small>' . __( "Leave blank to disable", "custom-permalinks" ) . '</small>' .
+                  '<small>' .
+                      __( 'Leave blank to disable', 'custom-permalinks' ) .
+                  '</small>' .
                   '</td>' .
                   '</tr>' .
                   '</table>';
@@ -485,7 +529,9 @@ class Custom_Permalinks_Form
     public function save_term( $term_id )
     {
         $term = get_term( $term_id );
-        if ( isset( $term ) && isset( $term->taxonomy ) ) {
+        if ( isset( $_REQUEST['custom_permalink'] ) && isset( $term )
+            && isset( $term->taxonomy )
+        ) {
             $taxonomy_name = $term->taxonomy;
             if ( 'category' === $taxonomy_name
                 || 'post_tag' === $taxonomy_name
@@ -660,8 +706,11 @@ class Custom_Permalinks_Form
     {
         register_rest_route( 'custom-permalinks/v1', '/get-permalink/(?P<id>\d+)',
             array(
-                'methods'  => 'GET',
-                'callback' => array( $this, 'refresh_meta_form' ),
+                'methods'             => 'GET',
+                'callback'            => array( $this, 'refresh_meta_form' ),
+                'permission_callback' => function() {
+                    return current_user_can( 'edit_posts' );
+                },
             )
         );
     }

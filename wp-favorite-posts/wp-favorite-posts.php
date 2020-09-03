@@ -3,7 +3,7 @@
 Plugin Name: WP Favorite Posts
 Plugin URI: https://github.com/hberberoglu/wp-favorite-posts
 Description: Allows users to add favorite posts. This plugin use cookies for saving data so unregistered users can favorite a post. Put <code>&lt;?php wpfp_link(); ?&gt;</code> where ever you want on a single post. Then create a page which includes that text : <code>[wp-favorite-posts]</code> That's it!
-Version: 1.6.6
+Version: 1.6.7 + custom code
 Author: Huseyin Berberoglu
 Author URI: https://github.com/hberberoglu
 
@@ -27,6 +27,7 @@ Author URI: https://github.com/hberberoglu
 
 */
 
+define('WPFP_VERSION', "1.6.6");
 define('WPFP_PATH', plugins_url() . '/wp-favorite-posts');
 define('WPFP_META_KEY', "wpfp_favorites");
 define('WPFP_META_KEY_SFL', "wpfp_saved");
@@ -61,7 +62,6 @@ function wp_favorite_posts() {
         } else if ($_REQUEST['wpfpaction'] == 'save') {
             wpfp_save_favorite();
         } else if ($_REQUEST['wpfpaction'] == 'restore') {
-            wpfp_trash_saved();
 			wpfp_add_favorite();
         } else if ($_REQUEST['wpfpaction'] == 'trash') {
             wpfp_trash_saved();
@@ -115,7 +115,7 @@ function wpfp_remove_favorite($post_id = "") {
                 $str = wpfp_link(1, "add", 0, array( 'post_id' => $post_id ) );
             endif;
             wpfp_die_or_go($str);
-       // } else {
+        // } else {
         //    wpfp_die_or_go(wpfp_get_option('removed'));
         //}
     }
@@ -135,6 +135,7 @@ $wpfp_favorites = array();
 
 function wpfp_add_to_usermeta($post_id) {
     $wpfp_favorites = wpfp_get_user_meta();
+    // if(empty($wpfp_favorites) or !is_array($wpfp_favorites)) $wpfp_favorites = array();
     $wpfp_favorites[] = $post_id;
     wpfp_update_user_meta($wpfp_favorites);
     return true;
@@ -144,9 +145,9 @@ function wpfp_check_favorited($cid) {
     if (is_user_logged_in()) {
         $favorite_post_ids = wpfp_get_user_meta();
         if ($favorite_post_ids)
-            if (is_array($favorite_post_ids))
-                foreach ($favorite_post_ids as $fpost_id)
-                    if ($fpost_id == $cid) return true;
+        if (is_array($favorite_post_ids))
+            foreach ($favorite_post_ids as $fpost_id)
+                if ($fpost_id == $cid) return true;
 	} else {
 	    if (wpfp_get_cookie()):
 	        foreach (wpfp_get_cookie() as $fpost_id => $val)
@@ -181,8 +182,8 @@ function wpfp_link( $return = 0, $action = "", $show_span = 1, $args = array() )
 }
 
 function wpfp_link_html($post_id, $opt, $action) {
-    // $link = "<a class='wpfp-link' href='?wpfpaction=".$action."&amp;postid=". $post_id . "' title='". $opt ."' rel='nofollow'><div class='icons favs ". $action ."'></div></a><span><a href='" . site_url() . "/favourites/' class='favs'>Compare favourites</a></span>";
-    $link = "<a class='wpfp-link' href='?wpfpaction=".$action."&amp;postid=". $post_id . "' title='". $opt ."' rel='nofollow'><div class='icons favs ". $action ."'></div></a>";
+    // $link = "<a class='wpfp-link' href='?wpfpaction=".$action."&amp;postid=". esc_attr($post_id) . "' title='". $opt ."' rel='nofollow'>". $opt ."</a>";
+    $link = "<a class='wpfp-link' href='?wpfpaction=".$action."&amp;postid=". esc_attr($post_id) . "' title='". $opt ."' rel='nofollow'><div class='icons favs ". $action ."'></div></a>";
     $link = apply_filters( 'wpfp_link_html', $link );
     return $link;
 }
@@ -333,7 +334,7 @@ add_shortcode('wp-favorite-posts', 'wpfp_shortcode_func');
 
 function wpfp_add_js_script() {
 	if (!wpfp_get_option('dont_load_js_file'))
-		wp_enqueue_script( "wp-favorite-posts", WPFP_PATH . "/wpfp.js", array( 'jquery' ) );
+		wp_enqueue_script( "wp-favorite-posts", WPFP_PATH . "/script.js", array( 'jquery' ), WPFP_VERSION );
 }
 add_action('wp_print_scripts', 'wpfp_add_js_script');
 
@@ -407,8 +408,8 @@ function wpfp_get_options() {
 
 function wpfp_get_user_id() {
     global $current_user;
-    //get_currentuserinfo(); is deprecated since Wordpress 4.5
-    wp_get_current_user();
+        //get_currentuserinfo(); is deprecated since Wordpress 4.5
+    $current_user = wp_get_current_user();
     return $current_user->ID;
 }
 
@@ -484,7 +485,7 @@ function wpfp_get_option($opt) {
     return htmlspecialchars_decode( stripslashes ( $wpfp_options[$opt] ) );
 }
 
-//SAVE FOR LATER FUNCTIONS
+//SAVE FOR LATER FUNCTIONS - cancel from here if version 1.6.7 is broken
 
 
 function wpfp_update_user_meta_sfl($arr) {
