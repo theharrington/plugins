@@ -1,26 +1,27 @@
-(function($) {
-    $('.wpfp-link').live('click', function() {
+(function($){
+    $('.wpfp-link').live('click',function() {
         dhis = $(this);
-	
-	wpfp_do_js( dhis, 1 );
-	$tick = 1;
+
+        wpfp_do_js( dhis, 1 );
+        $tick = 1;
         // for favorite post listing page
         if (dhis.hasClass('remove-parent')) {
             dhis.parent("li").fadeOut();
-	}
-	if (dhis.html() === '<div class="icons favs add"></div>') {
-	        $fave = $("#favCount").html();
+        }
+        else if (dhis.html() === '<div class="icons favs add"></div>') {
+                $fave = $("#favCount").html();
         $tick = 1;
-	//console.log(Number($("#favCount").html()));
-	//console.log(dhis.html());
+        console.log(Number($("#favCount").html()));
+        console.log(dhis.html());
         $("#favCount").html(Number(Number($tick) + Number($fave)));
         // for favorite post listing page
-	} else {
-	$("#favCount").html(Number($fave));		
-	$fave = $fave -1;
-	}	
+        } else {
+        $("#favCount").html(Number($fave));                        
+        $fave = $fave -1;
+        }
         return false;
-    });
+});
+
 
 function wpfp_do_js( dhis, doAjax ) {
     // loadingImg = dhis.prev();
@@ -33,17 +34,16 @@ function wpfp_do_js( dhis, doAjax ) {
         $.get(url, params, function(data) {
                 dhis.parent().html(data);
                 //console.log(dhis.parent().html(data))
-		//console.log(dhis)
+                //console.log(dhis)
                 if(typeof wpfp_after_ajax == 'function') {
                     wpfp_after_ajax( dhis ); // use this like a wp action.
                 }
              // loadingImg.hide();
-	    }
+            }
         );
     } else {
-	
-}	
 
 }
 
+}
 })(jQuery);
