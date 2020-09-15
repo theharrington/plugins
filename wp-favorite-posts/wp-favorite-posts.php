@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: WP Favorite Posts
-Plugin URI: https://github.com/hberberoglu/wp-favorite-posts
-Description: Allows users to add favorite posts. This plugin use cookies for saving data so unregistered users can favorite a post. Put <code>&lt;?php wpfp_link(); ?&gt;</code> where ever you want on a single post. Then create a page which includes that text : <code>[wp-favorite-posts]</code> That's it!
-Version: 1.6.7 + custom code
-Author: Huseyin Berberoglu
-Author URI: https://github.com/hberberoglu
+Plugin URI: https://theharrington.com/
+Description: Based on the original WP favourites Plugin By Huseyin Berberoglu. This plugin has been modified for theharrington.com . Allows users to add favorite apartments (see properties custom post types). This plugin use cookies for saving data so unregistered users can favorite a post. Put <code>&lt;?php wpfp_link(); ?&gt;</code> where ever you want on a single post. Then create a page which includes that text : <code>[wp-favorite-posts]</code> That's it!
+Version: 1.6.7 + custom code (CW: 05.09.2020)
+Author: The Harrington Collection
+Author URI: https://theharrington.com
 
 */
 
