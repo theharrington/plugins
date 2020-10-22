@@ -52,7 +52,7 @@
             <div class=" col-sm-12 clearfix border-bottom pt-2 pb-2">
             
                     <h2 class="clearfix"><a href='<?php echo get_permalink(); ?>' title='<?php echo get_the_title(); ?>'><?php echo get_the_title(); ?></a></h2>
-                    <div class="row">
+                    <div id="favLinks" class="row">
                         <div class="col-sm-6"><a href="javascript:;" class="fav-remove" ><?php wpfp_saveforlater_favorite_link(get_the_ID()); ?></a></div>
                        <div class="col-sm-6 text-right"><a href="javascript:;" class="fav-remove" ><?php wpfp_remove_favorite_link(get_the_ID()); ?></a></div>
                     </div>
@@ -149,7 +149,7 @@
                 <div class="row mt-3 mb-3 border clearfix">
                 <div class=" col-sm-12 clearfix border-bottom pt-2 pb-2">
                     <h2 class="clearfix"><a href='<?php echo get_permalink(); ?>' title='<?php echo get_the_title(); ?>'><?php echo get_the_title(); ?></a></h2>
-                    <div class="row">
+                    <div id="saveFavLinks" class="row">
                         <div class="col-sm-6"><a href="javascript:;" class="fav-remove" ><?php wpfp_restore_favorite_link(get_the_ID()); ?></a></div>
                         <div class="col-sm-6 text-right"><a href="javascript:;" class="fav-remove" ><?php wpfp_trash_favorite_link(get_the_ID()); ?></a></div>
                     </div>
